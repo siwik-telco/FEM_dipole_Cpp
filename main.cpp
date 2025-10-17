@@ -62,7 +62,7 @@ int main() {
     }
 
     std::cout << "\nBest impedance match: " << f_best << " MHz, RL = " << minRL << " dB" << std::endl;
-    std::cout << "For RL < -10 dB, change the lenght for ~2-5% jeśli X >0." << std::endl;
+//std::cout << "For RL < -10 dB, change the lenght for ~2-5% jeśli X >0." << std::endl;
 
     return 0;
 }

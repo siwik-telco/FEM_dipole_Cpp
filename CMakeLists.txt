@@ -8,4 +8,6 @@ add_executable(dipole_FEM_Cpp main.cpp
         dipoleAntenna.h
         ImpedanceMatcher.cpp
         ImpedanceMatcher.h
+        DisplayResults.cpp
+        DisplayResults.h
 )

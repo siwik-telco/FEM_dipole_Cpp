@@ -24,7 +24,9 @@ double dipoleAntenna::radationResistance(double f) const {
 
 double dipoleAntenna::reactance(double f) const {
     double w = 2 * PI * f;
-    double X = (Et0/ (2*PI)) *  (2*std::log(w*lenght/(C* PI *radius))- 2.25);
+    // double X = (Et0/ (2*PI)) *  (2*std::log(w*lenght/(C* PI *radius))- 2.25);
+    double X = (Et0/ (2*PI)) * (2*std::log10(w*lenght/(C* PI *radius))- 2.25);
+
     double ohm = 2 * radius / lenght;
     if (ohm> 0.001) {
          X *= (1.0-0.2 * std::log(1.0/ohm));
@@ -36,7 +38,7 @@ double dipoleAntenna::inductance(double f) const {
     double w = 2 * PI * f;
     double x = reactance(f);
     if (x>0) {
-        return (x/w*1e9);
+        return (x/w) * 1e9;
     }
     else {
         return 0.0;

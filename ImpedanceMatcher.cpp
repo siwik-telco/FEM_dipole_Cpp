@@ -12,7 +12,7 @@ double ImpedanceMatcher::targetImpedance() {
 
 double ImpedanceMatcher::RL(const std::complex<double> &Z_ant) const {
     std::complex<double> Gamma = (Z_ant - R_load) / (Z_ant + R_load);
-    return 20 * std::log(std::abs(Gamma));
+    return -20 * std::log10(std::abs(Gamma));
 }
 
 
