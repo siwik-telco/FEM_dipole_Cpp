@@ -1,48 +1,68 @@
 #include <iostream>
+#include <vector>
+#include <iomanip>
+#include <complex>
 #include "dipoleAntenna.h"
 #include "ImpedanceMatcher.h"
-int main () {
-    double f_min, f_max, length, width, R_load1;
+
+int main() {
+    double f_min_mhz, f_max_mhz, length, width, R_load;
     int n_points;
 
-    std::cout << "Min freq: \n";
-    std::cin >> f_min;
+    std::cout << "Min freq [MHz]: ";
+    std::cin >> f_min_mhz;
+    std::cout << "Max freq [MHz]: ";
+    std::cin >> f_max_mhz;
 
-    std::cout << "Max freq: \n";
-    std::cin >> f_max;
+    double f_min = f_min_mhz * 1e6;
+    double f_max = f_max_mhz * 1e6;
 
-    std::cout << "Length of dipole: \n";
+    std::cout << "Length of dipole [m]: ";
     std::cin >> length;
-
-    std::cout << "Width of dipole: \n";
+    std::cout << "Width of dipole [m]: ";
     std::cin >> width;
 
-    std::cout << "Imput impendance of system: \n";
-    std::cin >> R_load1;
 
-    std::cout << "Number of points in simulation: \n";
+    std::cout << "Input impedance of system [Ohm]: ";
+    std::cin >> R_load;
+
+
+    std::cout << "Number of points in simulation: ";
     std::cin >> n_points;
+    if (n_points < 2) n_points = 10;
 
     dipoleAntenna dipole(length, width);
-    ImpedanceMatcher matcher(R_load1);
+    ImpedanceMatcher matcher(R_load);
 
-    double df =  (f_max-f_min) / (n_points - 1.0);
-    std::cout << "test";
+    double df = (f_max - f_min) / (n_points - 1.0);
+
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "\nFreq [MHz]\tR [Ω]\tX [Ω]\tL [nH]\tRL [dB]" << std::endl;
 
     double minRL = -50;
-    double fbest = 0.0;
+    double f_best = 0.0;
     std::complex<double> Z_best;
 
-    for (int i=0; i<n_points;i++) {
+    for (int i = 0; i < n_points; ++i) {
         double f = f_min + i * df;
-        double freq = f/1e6;
-        std::complex<double> Z =dipole.inputZ(f);
+        double freq_mhz = f / 1e6;
+        std::complex<double> Z = dipole.inputZ(f);
         double R = std::real(Z);
         double X = std::imag(Z);
-        double L = dipole.inductance(f);
-        double gam = matcher.RL(Z);
-        std::cout << "RL = " << gam << ".\n";
-        // std::cout << "R: X: L: " << R << " " << X << " " << L << ".\n";
+        double L_ind = dipole.inductance(f);
+        double rl_db = matcher.RL(Z);
+
+        std::cout << freq_mhz << "\t\t" << R << "\t" << X << "\t" << L_ind << "\t" << rl_db << std::endl;
+
+        if (rl_db < minRL) {
+            minRL = rl_db;
+            f_best = freq_mhz;
+            Z_best = Z;
+        }
     }
+
+    std::cout << "\nBest impedance match: " << f_best << " MHz, RL = " << minRL << " dB" << std::endl;
+    std::cout << "For RL < -10 dB, change the lenght for ~2-5% jeśli X >0." << std::endl;
+
     return 0;
 }
