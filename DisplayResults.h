@@ -6,11 +6,13 @@
 #define DISPLAYRESULTS_H
 #include <vector>
 #include <string>
-#include "gnuplot-iostream.h"
+// #include "gnuplot-iostream.h"
 
 
 class DisplayResults {
-
+public:
+    DisplayResults();
+    void display();
 };
 
 

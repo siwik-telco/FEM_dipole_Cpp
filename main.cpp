@@ -2,9 +2,11 @@
 #include <vector>
 #include <iomanip>
 #include <complex>
+#include <fstream>
+#include <cstdlib>
 #include "dipoleAntenna.h"
 #include "ImpedanceMatcher.h"
-
+#include "DisplayResults.h"
 int main() {
     double f_min_mhz, f_max_mhz, length, width, R_load;
     int n_points;
@@ -36,6 +38,8 @@ int main() {
 
     double df = (f_max - f_min) / (n_points - 1.0);
 
+    std::vector<double> freqs, rs, xs, ls, rls;
+
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "\nFreq [MHz]\tR [Ω]\tX [Ω]\tL [nH]\tRL [dB]" << std::endl;
 
@@ -54,15 +58,32 @@ int main() {
 
         std::cout << freq_mhz << "\t\t" << R << "\t" << X << "\t" << L_ind << "\t" << rl_db << std::endl;
 
+        freqs.push_back(freq_mhz);
+        rs.push_back(R);
+        xs.push_back(X);
+        ls.push_back(L_ind);
+        rls.push_back(rl_db);
+
+
+
         if (rl_db < minRL) {
             minRL = rl_db;
             f_best = freq_mhz;
             Z_best = Z;
         }
+
     }
 
     std::cout << "\nBest impedance match: " << f_best << " MHz, RL = " << minRL << " dB" << std::endl;
 //std::cout << "For RL < -10 dB, change the lenght for ~2-5% jeśli X >0." << std::endl;
 
+    std::ofstream data_file("results.dat");
+    data_file << std::fixed << std::setprecision(2);
+    for (size_t i = 0; i < freqs.size(); ++i) {
+        data_file << freqs[i] << "\t" << rs[i] << "\t" << xs[i] << "\t" << ls[i] << "\t" << rls[i] << std::endl;
+    }
+    data_file.close();
+    DisplayResults display;
+    display.display();
     return 0;
 }
