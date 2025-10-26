@@ -1,89 +1,48 @@
 #include <iostream>
-#include <vector>
 #include <iomanip>
 #include <complex>
-#include <fstream>
-#include <cstdlib>
-#include "dipoleAntenna.h"
+#include <vector>
+#include "FEM.h"
 #include "ImpedanceMatcher.h"
-#include "DisplayResults.h"
+
 int main() {
-    double f_min_mhz, f_max_mhz, length, width, R_load;
-    int n_points;
+    std::cout << std::fixed << std::setprecision(3);
+
+    double fmin_mhz, fmax_mhz, length_m, radius_m;
+    int n_points, nElemHalf;
 
     std::cout << "Min freq [MHz]: ";
-    std::cin >> f_min_mhz;
+    std::cin >> fmin_mhz;
     std::cout << "Max freq [MHz]: ";
-    std::cin >> f_max_mhz;
+    std::cin >> fmax_mhz;
+    double fmin = fmin_mhz * 1e6, fmax = fmax_mhz * 1e6;
 
-    double f_min = f_min_mhz * 1e6;
-    double f_max = f_max_mhz * 1e6;
+    std::cout << "Dipole total length [m]: ";
+    std::cin >> length_m;
+    std::cout << "Wire radius [m]: ";
+    std::cin >> radius_m;
 
-    std::cout << "Length of dipole [m]: ";
-    std::cin >> length;
-    std::cout << "Width of dipole [m]: ";
-    std::cin >> width;
-
-
-    std::cout << "Input impedance of system [Ohm]: ";
-    std::cin >> R_load;
-
-
-    std::cout << "Number of points in simulation: ";
+    std::cout << "Number of frequency points: ";
     std::cin >> n_points;
     if (n_points < 2) n_points = 10;
 
-    dipoleAntenna dipole(length, width);
-    ImpedanceMatcher matcher(R_load);
+    std::cout << "Elements per half (e.g. 20): ";
+    std::cin >> nElemHalf;
+    if (nElemHalf < 4) nElemHalf = 10;
 
-    double df = (f_max - f_min) / (n_points - 1.0);
+    double fstep = (fmax - fmin) / (n_points - 1);
+    FEM fem(length_m, radius_m, 2 * nElemHalf);
+    ImpedanceMatcher matcher(50.0); // np. 50 Ω system
 
-    std::vector<double> freqs, rs, xs, ls, rls;
-
-    std::cout << std::fixed << std::setprecision(2);
-    std::cout << "\nFreq [MHz]\tR [Ω]\tX [Ω]\tL [nH]\tRL [dB]" << std::endl;
-
-    double minRL = -50;
-    double f_best = 0.0;
-    std::complex<double> Z_best;
-
-    for (int i = 0; i < n_points; ++i) {
-        double f = f_min + i * df;
-        double freq_mhz = f / 1e6;
-        std::complex<double> Z = dipole.inputZ(f);
-        double R = std::real(Z);
-        double X = std::imag(Z);
-        double L_ind = dipole.inductance(f);
-        double rl_db = matcher.RL(Z);
-
-        std::cout << freq_mhz << "\t\t" << R << "\t" << X << "\t" << L_ind << "\t" << rl_db << std::endl;
-
-        freqs.push_back(freq_mhz);
-        rs.push_back(R);
-        xs.push_back(X);
-        ls.push_back(L_ind);
-        rls.push_back(rl_db);
-
-
-
-        if (rl_db < minRL) {
-            minRL = rl_db;
-            f_best = freq_mhz;
-            Z_best = Z;
-        }
-
+    std::cout << "\nFreq[MHz]\tRe(Z)[Ω]\tIm(Z)[Ω]\tRL[dB]\n";
+    for (int i = 0; i < n_points; i++) {
+        double f = fmin + i * fstep;
+        std::complex<double> Z = fem.solve_impedance(f);
+        double RL = matcher.RL(Z);
+        std::cout << f / 1e6 << "\t\t" << Z.real() << "\t\t" << Z.imag()
+                  << "\t\t" << RL << "\n";
     }
 
-    std::cout << "\nBest impedance match: " << f_best << " MHz, RL = " << minRL << " dB" << std::endl;
-//std::cout << "For RL < -10 dB, change the lenght for ~2-5% jeśli X >0." << std::endl;
-
-    std::ofstream data_file("results.dat");
-    data_file << std::fixed << std::setprecision(2);
-    for (size_t i = 0; i < freqs.size(); ++i) {
-        data_file << freqs[i] << "\t" << rs[i] << "\t" << xs[i] << "\t" << ls[i] << "\t" << rls[i] << std::endl;
-    }
-    data_file.close();
-    DisplayResults display;
-    display.display();
+    std::cout << "\n(Uwaga: to uproszczony 1D-FEM, nie modeluje pełnego promieniowania 3D.)\n";
     return 0;
 }
