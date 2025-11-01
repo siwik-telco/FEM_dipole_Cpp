@@ -12,7 +12,7 @@ class ImpedanceMatcher {
 public:
     ImpedanceMatcher(double R_load);
     double RL(const std::complex<double>& Z_ant) const;
-    double targetImpedance();
+    double targetImpedance() const;
 
 private:
     double R_load;

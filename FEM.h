@@ -5,24 +5,51 @@
 
 #ifndef FEM_H
 #define FEM_H
+
+
+#include "Traingles.h"
+#include "MeshGen.h"
 #include <vector>
 #include <complex>
 
 using dcomp = std::complex<double>;
 
-class FEM {
+class FEM2D {
 public:
-    FEM(double length_m, double radius_m, int nElems);
-    dcomp solve_impedance(double f);
+    FEM2D(double length_m, double radius_m, double domain_radius_m);
+
+    dcomp solve_impedance(double freq);
+
+    // Eksport wyników do pliku
+    void exportField(const std::string& filename,
+                     const std::vector<dcomp>& field) const;
 
 private:
-    double L;
-    double r;
-    int Nelem;
-    int Nnodes;
+    MeshGen mesh;
+    double L, r, r_domain;
 
-    void apply_dirichlet(std::vector<std::vector<dcomp>>& A, std::vector<dcomp>& B, int node, dcomp value);
-    std::vector<dcomp> denseSolver(std::vector<std::vector<dcomp>>& A, std::vector<dcomp>& B);
+    // Składanie macierzy globalnej (assembly)
+    void assembleGlobalSystem(
+        double k0,
+        std::vector<std::vector<dcomp>>& K_global,
+        std::vector<dcomp>& F_global) const;
+
+    // Nałożenie warunków brzegowych
+    void applyDirichletBC(
+        std::vector<std::vector<dcomp>>& K,
+        std::vector<dcomp>& F,
+        const std::vector<int>& bc_nodes,
+        dcomp value) const;
+
+    void applyAbsorbingBC(
+        std::vector<std::vector<dcomp>>& K,
+        double k0,
+        const std::vector<int>& abc_nodes) const;
+
+    // Solver układu równań (Gauss)
+    std::vector<dcomp> solveLinearSystem(
+        std::vector<std::vector<dcomp>>& A,
+        std::vector<dcomp>& b) const;
 };
 
-#endif //FEM_H
+#endif // FEM_H

@@ -11,4 +11,8 @@ add_executable(dipole_FEM_Cpp main.cpp
         DisplayResults.cpp
         DisplayResults.h
         FEM.cpp
+        Traingles.cpp
+        Traingles.h
+        MeshGen.cpp
+        MeshGen.h
 )
